@@ -6,8 +6,13 @@ import pprint
 import datetime
 
 import os
+import random
 import discord
+from discord.ext import commands
 from dotenv import load_dotenv
+
+BOT_VERSION = 'v1.1'
+BOT_REPOSITORY = 'https://github.com/aknavj/discord-menicka-bot'
 
 SOURCE_URL = 'https://www.menicka.cz/tisk.php?'
 pp = pprint.PrettyPrinter(indent=4)
@@ -49,64 +54,78 @@ def populateRestaurant(id_restaurace):
     return None
 
 # populate buffer with lunch information
-def lunchMenus(restaurant_list, weekday):
-
-    if restaurant_list is None:
-        return "No restaurants present!"
-
+def restaurantLunchMenu(restaurant, name, weekday):
     buf = []
     d = weekday
-
-    rIt = 0
-    restaurants = [*restaurant_list]
-    for res in restaurant_list.values():
-        dl, sl, mdl, pl = populateRestaurant(res)
-        if dl is not None:
-            buf.append(restaurants[rIt])
-            rIt = rIt + 1
-
-            buf.append(dl[d])
+    dl, sl, mdl, pl = populateRestaurant(restaurant)
+    if dl is not None:
+        buf.append(name)
+        buf.append(dl[d])
             
-            # printout soups
-            it = 1
-            buf.append("Polevky.... {0}".format(len(sl[d])))
-            for soup in sl[d]:
-                buf.append("    {0}. {1}".format(it, soup))
-                it = it + 1
+        # printout soups
+        it = 1
+        buf.append("Polevky.... {0}".format(len(sl[d])))
+        for soup in sl[d]:
+            buf.append("    {0}. {1}".format(it, soup))
+            it = it + 1
                 
-            buf.append("Hlavni jidlo... {0}".format(len(mdl[d])))
-            it = 1
-            for meal in mdl[d]:
-                buf.append("    {0}. {1}".format(it, meal))
-                it = it + 1
-        else:
-            buf.append("Restaurace nema zadane menu!")
-    return buf
+        buf.append("Hlavni jidlo... {0}".format(len(mdl[d])))
+        it = 1
+        for meal in mdl[d]:
+            buf.append("    {0}. {1}".format(it, meal))
+            it = it + 1
+    else:
+        buf.append("Restaurace nema zadane menu!")
 
+    return buf
+ 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-client = discord.Client()
+bot = commands.Bot(command_prefix='!')
 
-@client.event
 async def on_ready():
     print(f'{client.user.name} has connected to Discord!')
     pass
 
-@client.event
-async def on_message(message):
-    if message.content == 'restaurants!':
-        header = [*restaurant_list]
-        for r in header:
-            await message.channel.send(r)
+@bot.command(name='version', help='sources & bot version')
+async def get_version(ctx):
+    await ctx.send("version: {0}\nsource: {1}\nrepo: {2}\n". format(BOT_VERSION, SOURCE_URL, BOT_REPOSITORY))
 
-    if message.content == 'lunch!':
-        weekday = datetime.datetime.today().weekday()
-        response = lunchMenus(restaurant_list, weekday)
-        for r in response:
-            await message.channel.send(r)
+@bot.command(name='dice', help='Your lunch destiny is fullfiled by me!')
+async def dice_lunch(ctx):
+    buf = ""
 
-client.run(TOKEN)
+    # pick random restaurant
 
-#if __name__ == '__main__':    
-#    pp.pprint(buf)          
+    # pick random meal from restaurant
+
+    await ctx.send('Dnes si das.... {0}, {1}'.format(buf, 0))
+
+@bot.command(name='restaurant', help='List our favorite restaurants in Trinec!')
+async def get_restaurant(ctx):
+    msg = [*restaurant_list]
+
+    buf = ""
+    for item in msg:
+        buf += item + ", "
+
+    await ctx.send(buf)
+
+@bot.command(name='lunch', help='Where to?')
+async def get_lunch(ctx):
+    weekday = datetime.datetime.today().weekday()
+
+    rIt = 0
+    restaurants = [*restaurant_list]
+    for res in restaurant_list.values():
+        data = restaurantLunchMenu(res, restaurants[rIt], weekday)
+        rIt = rIt + 1
+
+        msg = ""
+        for d in data:
+            msg += str('{0}\n'.format(d))
+
+        await ctx.send(msg)
+
+bot.run(TOKEN)
