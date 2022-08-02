@@ -19,9 +19,12 @@ pp = pprint.PrettyPrinter(indent=4)
 
 #populate it by favorites
 restaurant_list = {
-    'Pizzerie u Tomase' : 5899,
-    'Slezska krcma' : 5854,
+    #'Pizzerie u Tomase' : 5899,
+    'Bufet u Kocura' : 7363,
+    'Vidle Irish Pub' : 5859,
+    'Cafe bar - restaurant Arcade' : 5806,
     'Pochutnej si! Bistro' : 7792,
+    'Slezska krcma' : 5854,
 }
 
 # parse html output
@@ -59,24 +62,29 @@ def restaurantLunchMenu(restaurant, name, weekday):
     d = weekday
     dl, sl, mdl, pl = populateRestaurant(restaurant)
     if dl is not None:
-        buf.append(name)
-        buf.append(dl[d])
+        # restaurant + day header
+        buf.append("**{0}** - {1}\n".format(name,dl[d][0]))
             
         # printout soups
         it = 1
         buf.append("Polevky.... {0}".format(len(sl[d])))
+        buf.append("```")
         for soup in sl[d]:
             buf.append("    {0}. {1}".format(it, soup))
             it = it + 1
-                
+        buf.append("```")
+
         buf.append("Hlavni jidlo... {0}".format(len(mdl[d])))
+        buf.append("```")
         it = 1
         for meal in mdl[d]:
             buf.append("    {0}. {1}".format(it, meal))
             it = it + 1
+        buf.append("```")
     else:
+        buf.append("```diff")
         buf.append("Restaurace nema zadane menu!")
-
+        buf.append("```")
     return buf
  
 load_dotenv()
@@ -125,6 +133,8 @@ async def get_lunch(ctx):
         msg = ""
         for d in data:
             msg += str('{0}\n'.format(d))
+
+        msg += "source: {0}restaurace={1}\n".format(SOURCE_URL, res)
 
         await ctx.send(msg)
 
