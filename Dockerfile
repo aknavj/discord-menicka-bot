@@ -7,6 +7,7 @@ WORKDIR /usr/src/bot
 COPY . .
 
 # initialize pip
-RUN pipenv install --system --deploy --ignore-pipfile
+RUN pip install pipenv \ 
+    && pipenv install --system --deploy --ignore-pipfile
 
 CMD [ "python3", "app.py" ]
