@@ -1,9 +1,9 @@
 FROM python:3
 FROM gorialis/discord.py
 
-RUN mkdir -p `pwd`
-WORKDIR `pwd`
+RUN mkdir -p /usr/src/bot
+WORKDIR /usr/src/bot
 
 COPY . .
 
-CMD [ "python3", "discord_bot.py" ]
+CMD [ "python3", "app.py" ]
